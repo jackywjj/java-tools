@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Java Tools</title>
+    <link href="/static/favicon.ico" rel="bookmark" type="image/x-icon"/>
+    <link href="/static/favicon.ico" rel="icon" type="image/x-icon"/>
+    <link href="/static/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+    {% block head %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawsome/css/font-awesome.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    {% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Java Tools</a>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-2 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li {% if data.menuid== 1 %}class="active" {% endif %}><a href="/">Dashboard</a></li>
+                <li {% if data.menuid== 2 %}class="active" {% endif %}><a href="/java/dbtools">Java Code Tools</a></li>
+            </ul>
+        </div>
+        <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 main">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% block footer %}
+{% endblock %}
+</body>
+</html>
