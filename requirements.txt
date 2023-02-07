@@ -3,3 +3,7 @@ Flask-SQLAlchemy
 flask-wtf
 flask-paginate
 mysqlclient
+itsdangerous
+MarkupSafe
+
+

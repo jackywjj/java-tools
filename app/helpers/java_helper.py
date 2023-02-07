@@ -90,8 +90,8 @@ def get_update_sql_v2(tableName, fields):
     for field in fields:
         attr = convertField(field['field'])
         if not (field['extra'] == 'auto_increment'):
-            sql += "\t\t\t&lt;if test=\"" + attr + "!=null\"&gt; " + field['field'] + "=#{" + attr + "} " \
-                                                                                                     "&lt;/if&gt;<br/>"
+            sql += "\t\t\t&lt;if test=\"" + attr + "!=null\"&gt; " + field[
+                'field'] + "=#{" + attr + "} &lt;/if&gt;<br/>"
     sql += "\t\t&lt;/set&gt;<br/>"
     sql += "\t\tWHERE id=#{id}"
     return sql
@@ -166,12 +166,17 @@ def get_simple_select_sql(tableName, fields):
 
 
 def get_java_entity(tableName, objectName, fields):
-    code = "@Data<br/>@EqualsAndHashCode(callSuper = false)<br/>@TableName(\"" + tableName + "\")<br/>"
+    code = "@Getter<br/>@Setter<br/>@Builder<br/>@ToString<br/>@NoArgsConstructor<br/>@AllArgsConstructor<br/>" \
+           "@EqualsAndHashCode(callSuper = false)<br/>@TableName(\"" + tableName + "\")<br/>"
     code += "public class " + titleFirst(objectName) + " {<br/>"
     for field in fields:
         attr = convertField(field['field'])
         code += "\t" + '/** ' + field['comment'] + ' */' + "<br/>"
-        code += "\t" + 'private String ' + attr + ";<br/>"
+        fieldType = renderFieldType(field['type'])
+        annotation = rederAnnotation(field['field'])
+        if annotation != None:
+            code += "\t" + annotation + "<br/>"
+        code += "\t" + 'private ' + fieldType + ' ' + attr + ";<br/>"
     code += '}'
     return code
 
@@ -183,22 +188,38 @@ def get_java_dto(objectName, fields):
         attr = convertField(field['field'])
         if (attr != 'createdBy') and (attr != 'createdAt') and (attr != 'updatedBy') and (attr != 'updatedAt') and (
                 attr != 'active'):
-            code += "\t" + 'private String ' + attr + ";<br/>"
+            fieldType = renderFieldType(field['type'])
+            code += "\t" + 'private ' + fieldType + ' ' + attr + ";<br/>"
     code += '}'
     return code
 
 
 def get_java_bo(objectName, fields):
     code = "@Getter<br/>@Setter<br/>@Builder<br/>@ToString<br/>@NoArgsConstructor<br/>@AllArgsConstructor<br/>"
+    code += '@ApiModel("")' + "<br/>"
     code += "public class " + titleFirst(objectName) + "Bo {<br/>"
     for field in fields:
         attr = convertField(field['field'])
         if (attr != 'createdBy') and (attr != 'createdAt') and (attr != 'updatedBy') and (attr != 'updatedAt') and (
                 attr != 'active'):
-            code += "\t" + 'private String ' + attr + ";<br/>"
+            code += "\t" + '@ApiModelProperty(value = "' + field['comment'] + '")' + "<br/>"
+            fieldType = renderFieldType(field['type'])
+            code += "\t" + 'private ' + fieldType + ' ' + attr + ";<br/>"
     code += '}'
     return code
-
+    
+def get_java_form_bean(objectName, fields):
+    code = "@Getter<br/>@Setter<br/>@Builder<br/>@ToString<br/>@NoArgsConstructor<br/>@AllArgsConstructor<br/>"
+    code += "public class " + titleFirst(objectName) + "Form {<br/>"
+    for field in fields:
+        attr = convertField(field['field'])
+        if (attr != 'createdBy') and (attr != 'createdAt') and (attr != 'updatedBy') and (attr != 'updatedAt') and (
+                attr != 'active'):
+            code += "\t" + '@ApiModelProperty(value = "' + field['comment'] + '")' + "<br/>"
+            fieldType = renderFieldType(field['type'])
+            code += "\t" + 'private ' + fieldType + ' ' + attr + ";<br/>"
+    code += '}'
+    return code
 
 def get_java_vo(objectName, fields):
     code = "@Getter<br/>@Setter<br/>@Builder<br/>@ToString<br/>@NoArgsConstructor<br/>@AllArgsConstructor<br/>"
@@ -208,7 +229,8 @@ def get_java_vo(objectName, fields):
         if (attr != 'createdBy') and (attr != 'createdAt') and (attr != 'updatedBy') and (attr != 'updatedAt') and (
                 attr != 'active'):
             code += "\t" + '@ApiModelProperty(value = "' + field['comment'] + '")' + "<br/>"
-            code += "\t" + 'private String ' + attr + ";<br/>"
+            fieldType = renderFieldType(field['type'])
+            code += "\t" + 'private ' + fieldType + ' ' + attr + ";<br/>"
     code += '}'
     return code
 
@@ -249,6 +271,20 @@ def get_java_convertor(objectName):
     code += '}'
     return code
 
+def get_java_adapter(objectName):
+    code = "@Mapper<br/>"
+    code += "public interface " + titleFirst(objectName) + "Adapter {<br/>"
+    code += "\t" + titleFirst(objectName) + "Adapter INSTANCE = Mappers.getMapper(" + titleFirst(
+        objectName) + "Adapter.class);<br/>"
+    code += "\t" + titleFirst(objectName) + "Vo to" + titleFirst(objectName) + "Vo(" + titleFirst(
+        objectName) + "Bo " + objectName + "Bo);<br/>"
+    code += "\t" + titleFirst(objectName) + "Dto to" + titleFirst(objectName) + "Dto(" + titleFirst(
+        objectName) + "Form " + objectName + "Form);<br/>"
+    code += "\t" + "List&lt;" + titleFirst(objectName) + "Vo&gt; to" + titleFirst(
+        objectName) + "VoList(List&lt;" + titleFirst(
+        objectName) + "Bo&gt; " + objectName + "BoList);<br/>"
+    code += '}'
+    return code
 
 def getJavaMapper(objectName, table_name, fields):
     className = titleFirst(objectName)
@@ -389,6 +425,36 @@ def titleFirst(str):
     if len(str) <= 0:
         return
     return str[0:1].title() + str[1:]
+
+
+def renderFieldType(fieldType):
+    if fieldType.startswith('bigint'):
+        return 'Long'
+    elif fieldType.startswith('datetime'):
+        return 'LocalDateTime'
+    elif fieldType.startswith('date'):
+        return 'LocalDate'
+    elif fieldType.startswith('tinyint'):
+        return 'Integer'
+    elif fieldType.startswith('int'):
+        return 'Integer'
+    elif fieldType.startswith('decimal'):
+        return 'BigDecimal'
+    elif fieldType.startswith('timestamp'):
+        return 'LocalDateTime'
+    else:
+        return 'String'
+
+
+def rederAnnotation(fieldName):
+    if fieldName.startswith('active'):
+        return '@TableLogic' + "<br/>\t@TableField(fill = FieldFill.INSERT)"
+    elif fieldName.startswith('updated_at'):
+        return '@TableField(fill = FieldFill.INSERT_UPDATE)'
+    elif fieldName.startswith('created_at'):
+        return '@TableField(fill = FieldFill.INSERT)'
+    elif fieldName == 'id':
+        return '@TableId(value = "id",type = IdType.AUTO)'
 
 
 def debug_print(msg):
