@@ -10,8 +10,14 @@ TEMPLATE_DIR = BASE_DIR + '/templates'
 STATIC_DIR = BASE_DIR + '/static'
 # Define the database
 SQLALCHEMY_TRACK_MODIFICATIONS = True
-#SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:0401cy@127.0.0.1/cy_qydb'
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:dbbg1015@192.168.1.106/jy_business'
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:0401cy@127.0.0.1/cy_qydb'
+# SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:dbbg1015@192.168.1.106/jy_business'
+
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = '0401cy'
+MYSQL_HOST = '127.0.0.1'
+MYSQL_PORT = 3306
+MYSQL_DATABASE = 'metric_cloud_db'
 
 DATABASE_CONNECT_OPTIONS = {}
 
